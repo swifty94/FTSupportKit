@@ -1,21 +1,17 @@
 # FTSupportKit
 
-###################################################################################
-#
-#   Swiss knife shell interface for FTL Support team
-#
-#       Available options: 
-#                           - backup_acs            => Backup ACS cluster
-#                           - backup_db             => Backup DB*
-#                           - upgrade               => Upgrade ACS cluster
-#                           - liquibase             => Upgrade DB*
-#                           - clean_install_acs     => Install new ACS cluster
-#                           - clean_install_db      => Install new DB*
-#
-#                                    Author:    Kirill Rudenko
-#                                    Date:      22.03.2020
-#                                   
-###################################################################################
+Swiss knife shell interface for FTL Support team
+---
+- backup_acs            => Backup ACS cluster
+- backup_db             => Backup DB*
+- upgrade               => Upgrade ACS cluster
+- liquibase             => Upgrade DB*
+- clean_install_acs     => Install new ACS cluster
+- clean_install_db      => Install new DB*
+
+Author:    Kirill Rudenko
+Date:      22.03.2020
+
 
 Usage:
 --- 
@@ -131,10 +127,10 @@ Demo:
 ---
 Fresh installation:
 
-![](https://raw.githubusercontent.com/swifty94/FTSupportKit/main/media/clean_install.mp4)
+![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/clean_install.mp4)
 
 
 Upgrade:
 
-![](https://raw.githubusercontent.com/swifty94/FTSupportKit/main/media/upgrade.mp4)
+![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/upgrade.mp4)
 
