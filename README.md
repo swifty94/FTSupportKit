@@ -11,6 +11,7 @@ Available arguments:
 - clean_install_acs     => Install new ACS cluster
 - clean_install_db      => Install new DB*
 
+- *also can be a cluster
 
 Usage:
 --- 
