@@ -1,0 +1,15 @@
+[ACS]
+acs1 ansible_host= 
+acs2 ansible_host= 
+
+[ACS:vars]
+ansible_user= 
+ansible_pass= 
+
+[TR_DB]
+prod_db	ansible_host= 
+lab_db ansible_host= 
+
+[TR_DB:vars]
+ansible_user= 
+ansible_pass=

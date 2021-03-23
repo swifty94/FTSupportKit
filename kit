@@ -1,0 +1,212 @@
+#!/bin/bash
+set -e
+###################################################################################
+#
+#   Swiss knife shell interface for FTL Support team
+#
+#       Available options: 
+#                           - backup_acs            => Backup ACS cluster
+#                           - backup_db             => Backup DB*
+#                           - upgrade               => Upgrade ACS cluster
+#                           - liquibase             => Upgrade DB*
+#                           - clean_install_acs     => Install new ACS cluster
+#                           - clean_install_db      => Install new DB*
+#
+#                                    Author:    Kirill Rudenko
+#                                    Date:      23.03.2020
+#                                    GitHub:    https://github.com/swifty94
+#                                   
+###################################################################################
+
+###################################################################################
+#
+#           Edit customer-dependent settings below
+#
+###################################################################################
+
+DB_USR=''
+DB_PASS=''
+DB_DUMP_PATH=''
+DB_TYPE=''
+DB_HOST=''
+FTDB_USR=''
+FTDB_PASS=''
+FTDB_SCHEMA=''
+
+ACSPATH=''
+ACSHOME=''
+
+UPGRADE_ACS=''
+NEW_ACS=''
+
+###################################################################################
+#
+#           Main functionality code is below. DO NOT TOUCH IT!*
+#
+#                                              * Unless you know what you are doing
+###################################################################################
+
+function log(){
+    logfile="ftsupportkit.log"
+    export timestamp=$(date +'%F-%H-%M-%S')
+    func_name=$1
+    outcome=$2
+    log_line="[FTSupportKit] [$timestamp] [$func_name] [$outcome]"
+    echo "" |tee -a "$logfile"
+    echo "$log_line" |tee -a "$logfile"
+    echo "" |tee -a "$logfile"    
+}
+
+function backup_acs(){
+    export begin=$(date +'%H-%M-%S')
+    export self=${FUNCNAME[0]}
+    log "$self"  "  == >> ACS BACKUP STARTED << =="
+    ansible ACS -m shell -a "tar -cvf $ACSPATH/FTACS5_backup_$begin.tar.gz $ACSHOME" -b |tee -a "$logfile"
+    log "$self"  "ACS backup created"
+    log "$self"  "ACS location - $ACSPATH"
+    log "$self"  "Current state:"
+    ansible ACS -m shell -a "ls $ACSPATH/FTACS5_backup* -l" -b |tee -a "$logfile"   
+    log "$self"  "  == >> ACS BACKUP ENDED << =="
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "  Started: $begin Ended: $end"
+
+}
+
+function backup_db(){
+    export begin=$(date +'%H-%M-%S')
+    export self=${FUNCNAME[0]}
+    log "$self"  "  == >> BACKUP DB START << =="
+    ansible DB -m shell -a "mysqldump -u $DB_USR -p'$DB_PASS' --single-transaction --triggers --routines --events --databases ftacs admin csr ftacs_qoe ftacs_qoe_ui ftacs_quartz > $DB_DUMP_PATH/FTDump_$begin.sql &" -b |tee -a "$logfile"
+    log "$self"  "DB backup started in background"
+    log "$self"  "Dump location - $DB_DUMP_PATH"
+    log "$self"  "Current size:"
+    ansible DB -m shell -a "du $DB_DUMP_PATH/FTDump_* -sh" -b |tee -a "$logfile"    
+    log "$self"  "  == >> BACKUP DB END << =="
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "  Started: $begin Ended: $end"
+
+}
+
+function upgrade(){
+    export begin=$(date +'%H-%M-%S')
+    export self=${FUNCNAME[0]}
+    log "$self"  '== >> ACS UPGRADE STARTED << =='    
+    ansible ACS -m copy -a "src=upgrade/$UPGRADE_ACS dest=$ACSPATH" -b |tee -a "$logfile"
+    ansible ACS -m shell -a "unzip $ACSPATH/$UPGRADE_ACS -d $ACSPATH/FTACS5_new &" -b |tee -a "$logfile"
+    ansible ACS -m shell -a "chown -R jboss:jboss $ACSPATH/FTACS5_new" -b | tee -a "$logfile"    
+    log "$self"  "Content of $ACSPATH"
+    ansible ACS -m shell -a "ls $ACSPATH -halt" -b |tee -a "$logfile"
+    log "$self"  '== >> ACS UPGRADE ENDED << =='    
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "Started: $begin Ended: $end"
+}
+
+function liquibase(){
+    export begin=$(date +'%H-%M-%S')
+    export self=${FUNCNAME[0]}
+    log "$self"  '== >> DB UPGRADE STARTED << =='
+    if [ $DB_TYPE == 'mysql' ]; then
+        log "$self" "DB type == $DB_TYPE"
+        cd liquibase
+        java -jar liquibase.jar --logLevel=info --changeLogFile=com/db/changlog/master_changlog_5.0.1.xml --driver=com.mysql.jdbc.Driver --classpath=jdbc/mysql-connector-java-5.1.41-bin.jar --url=jdbc:mysql://$DB_HOST/$FTDB_SCHEMA --username=$FTDB_USR --password=$FTDB_PASS update | tee -a "$logfile"
+        cd ..
+    else
+        cd liquibase
+        log "$self" "DB type == $DB_TYPE"
+        java -jar liquibase.jar --logLevel=info --changeLogFile=com/db/changlog/master_changlog_5.0.1.xml --driver=oracle.jdbc.OracleDriver --classpath=jdbc/ojdbc7.jar --url=jdbc:oracle:thin:@$DB_HOST:1521/$FTDB_SCHEMA --username=$FTDB_USR --password=$FTDB_PASS update | tee -a "$logfile"
+        cd ..
+    fi    
+    log "$self"  '== >> DB UPGRADE ENDED << =='    
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "Started: $begin Ended: $end"
+}
+
+function clean_install_acs(){
+    export self=${FUNCNAME[0]}
+    export begin=$(date +'%H-%M-%S')
+    log "$self"  '== >> ACS CLEAN INSTALL STARTED << =='
+    ansible ACS -m copy -a "src=clean_install/$NEW_ACS dest=$ACSPATH" -b |tee -a "$logfile"
+    ansible ACS -m shell -a "unzip $ACSPATH/$NEW_ACS -d $ACSPATH/FTACS5 &" -b | tee -a "$logfile"
+    ansible ACS -m shell -a "unzip $ACSPATH/$NEW_ACS -d $ACSHOME &" -b | tee -a "$logfile"
+    ansible ACS -m shell -a "chown -R jboss:jboss $ACSHOME" -b | tee -a "$logfile"
+    ansible ACS -m shell -a "ls $ACSPATH -halt" -b | tee -a "$logfile"
+    log "$self"  '== >> ACS CLEAN INSTALL ENDED << =='    
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "Started: $begin Ended: $end"
+}
+
+function clean_install_db(){
+    export self=${FUNCNAME[0]}
+    export begin=$(date +'%H-%M-%S')
+    log "$self"  '== >> DB CLEAN INSTALL STARTED << =='    
+    ansible DB -m copy -a "src=clean_install/acs_v5.0.1.sql dest=/opt/" -b | tee -a "$logfile"
+    ansible DB -m shell -a "mysql -u$DB_USR -p$DB_PASS < /opt/acs_v5.0.1.sql" -b | tee -a "$logfile"
+    
+    liquibase
+    
+    log "$self"  '== >> DB CLEAN INSTALL ENDED << =='    
+    export end=$(date +'%H-%M-%S')
+    log "$self"  "Started: $begin Ended: $end"
+
+}
+
+function iflogExists(){
+    export timestamp=$(date +'%F-%H-%M-%S')
+    pattern='ftsupportkit.log'
+    format='ftsupportkit_'
+    extension='.log'
+    if [ -f $pattern ]; then
+        mv $pattern logs/$format$timestamp$extension
+    fi    
+}
+
+#
+#   Entry-point of the program
+#
+iflogExists
+case "$1" in
+
+        backup_db)
+            backup_db
+            exit 0
+            ;;
+
+        backup_acs)
+            backup_acs
+            exit 0
+            ;;
+        
+        upgrade)
+            upgrade
+            exit 0
+            ;;
+        
+        liquibase)
+            liquibase
+            exit 0
+            ;;
+
+        clean_install_acs)
+            clean_install_acs
+            exit 0
+            ;;
+
+        clean_install_db)
+            clean_install_db
+            exit 0
+            ;;
+
+        *)
+            echo "Usage: ./kit + arg:"
+            echo ""            
+            echo "             - backup_acs             // Backup ACS cluster"
+            echo "             - backup_db              // Backup DB*"
+            echo "             - upgrade                // Upgrade ACS cluster"
+            echo "             - liquibase              // Upgrade DB"
+            echo "             - clean_install_acs      // Install new ACS cluster"
+            echo "             - clean_install_db       // Install new DB*"
+            echo ""
+            echo "      * can be multinode env. as well"
+            echo ""            
+            exit 1
+esac
