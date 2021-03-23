@@ -2,15 +2,14 @@
 
 Swiss knife shell interface for FTL Support team
 ---
+Available arguments:
+
 - backup_acs            => Backup ACS cluster
 - backup_db             => Backup DB*
 - upgrade               => Upgrade ACS cluster
 - liquibase             => Upgrade DB*
 - clean_install_acs     => Install new ACS cluster
 - clean_install_db      => Install new DB*
-
-Author:    Kirill Rudenko
-Date:      22.03.2020
 
 
 Usage:
@@ -27,8 +26,7 @@ Once all is set - you can deploy/upgrade the farm of the servers using several c
 
 Example of project structure:
 ---
-$ tree
-.
+<pre>
 ├── ansible.cfg
 ├── clean_install
 │   ├── acsv5.sql
@@ -41,9 +39,11 @@ $ tree
 │   └── folder-for-old-ftsupportkit-logs
 └── upgrade
     └── FTACS5_new.zip
+</pre>
 
 Example of hosts file:
 ----
+<pre>
 [ACS]
 acs1 ansible_host=10.0.0.1
 acs2 ansible_host=10.0.0.2
@@ -59,9 +59,11 @@ lab_db ansible_host=10.0.0.4
 [TR_DB:vars]
 ansible_user=dbuser
 ansible_pass=dbpassword
+</pre>
 
 In case user/password is different for each node, place them in sigle section, without vars section, like below:
 
+<pre>
 [ACS]
 acs1 ansible_host=10.0.0.1 ansible_user=acsuser_1 ansible_pass=acspassword_1
 acs2 ansible_host=10.0.0.2 ansible_user=acsuser_2 ansible_pass=acspassword_2
@@ -69,11 +71,11 @@ acs2 ansible_host=10.0.0.2 ansible_user=acsuser_2 ansible_pass=acspassword_2
 [TR_DB]
 prod_db	ansible_host=10.0.0.3 ansible_user=dbuser_1 ansible_pass=dbpassword_1
 lab_db ansible_host=10.0.0.4 ansible_user=dbuser_2 ansible_pass=dbpassword_2
-
+</pre>
 
 Example of settings in kit:
 ---
-
+<pre>
 DB_USR='root'                           // Database user with DBA permissions
 DB_PASS='root'                          // Password for the user above
 DB_DUMP_PATH='/home/friendly/'          // Path where DB dump should be stored
@@ -88,28 +90,34 @@ ACSHOME='/usr/local/FTACS5'             // Full path of FTACS5
 
 UPGRADE_ACS='FTACS5_new.zip'            // Name of the zip for the upgrading of the ACS
 NEW_ACS='FTACS5.zip'                    // Name of the zip for fresh installation of the ACS
+</pre>
 
 Requirements
 ---
 1. OS - RHEL\CentOS\Fedora\Ubuntu\Debian. Regretfully, Windows is not supported as "host" machine for this tool.
 2. Java installed
 3. Ansible installed
+
 Installing of Ansible is described here - https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
 
 If there is no Internet and/or access to the repositories on your server - download relevant RPM from here https://releases.ansible.com/ansible/rpm/release/
 and use something like:
 
-yum localinstall ansible-2.9.19-1.el7.ans.noarch.rpm -y
+<pre>
+    yum localinstall ansible-2.9.19-1.el7.ans.noarch.rpm -y
+</pre>
 
+4. You MUST have SSH connection to all the hosts from the machine where you are running the program.
 
 Installation:
 ---  
-
-1. git clone git@github.com:swifty94/FTSupportKit.git
-
+<pre>
+git clone git@github.com:swifty94/FTSupportKit.git
+</pre>
 No Git installed? Just download the zip directly from here and upload on the server.
 
-2. cd FTSupportKit
+<pre>
+$ cd FTSupportKit
 $ ./kit 
 Usage: ./kit + arg:
 
@@ -121,7 +129,7 @@ Usage: ./kit + arg:
              - clean_install_db       // Install new DB*
 
       * can be multinode env. as well
-
+</pre>
 
 Demo:
 ---
