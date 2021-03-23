@@ -135,10 +135,10 @@ Demo:
 ---
 Fresh installation:
 
-![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/clean_install.mp4)
+![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/clean_install.gif)
 
 
 Upgrade:
 
-![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/upgrade.mp4)
+![](https://raw.githubusercontent.com/swifty94/FTSupportKit/master/media/upgrade.gif)
 
