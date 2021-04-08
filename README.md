@@ -3,7 +3,7 @@
 Swiss knife shell interface for FTL Support team
 ---
 Available arguments:
-
+<pre>
 - backup_acs            => Backup ACS cluster
 - backup_db             => Backup DB
 - upgrade               => Upgrade ACS cluster
@@ -12,6 +12,7 @@ Available arguments:
 - clean_install_db      => Install new DB
 
 - *DB also can be a cluster
+</pre>
 
 Usage:
 --- 
